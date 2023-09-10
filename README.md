@@ -26,15 +26,15 @@ Welcome to my Ansible Configuration and Playbooks repository. In addition to gen
 
 1. Clone this repository:
 
-    ```bash
-    git clone https://github.com/yourusername/ansible-configs.git
-    ```
+```bash
+git clone https://github.com/federicociro/ansible-configs.git
+```
 
 2. Navigate to the directory:
 
-    ```bash
-    cd ansible-configs
-    ```
+```bash
+cd ansible-configs
+```
 
 3. Update the `inventory.ini` with the target node information.
 
