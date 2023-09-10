@@ -1,0 +1,92 @@
+---
+- name: Setup fresh LXC
+  hosts: all
+  become: yes
+
+  vars:
+    ssh_keys_url: "https://github.com/federicociro.keys"
+    bashrc_url: "https://gist.githubusercontent.com/federicociro/3b0792254aa7f08cb6931766573055c9/raw/d5e08b99cb264b2251bc16fa1bf1c54a2d7646d2/rc"
+    bash_aliases_url: "https://gist.githubusercontent.com/federicociro/3b0792254aa7f08cb6931766573055c9/raw/d5e08b99cb264b2251bc16fa1bf1c54a2d7646d2/alias"
+
+  tasks:
+    - name: Update and upgrade apt packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+      when: "'debian_family' in group_names"
+
+    - name: Update and upgrade dnf packages
+      dnf:
+        name: '*'
+        state: latest
+      when: "'fedora' in group_names"
+
+    - name: Update and upgrade yum packages
+      yum:
+        name: '*'
+        state: latest
+      when: "'redhat_family' in group_names"
+
+    - name: Install necessary Debian packages
+      apt:
+        name:
+          - curl
+          - net-tools
+          - lnav
+          - tree
+          - ncdu
+        state: present
+      when: "'debian_family' in group_names"
+
+    - name: Install necessary Fedora packages
+      dnf:
+        name:
+          - curl
+          - net-tools
+          - lnav
+          - tree
+          - ncdu
+        state: present
+      when: "'fedora' in group_names"
+
+    - name: Install necessary CentOS/RHEL packages
+      yum:
+        name:
+          - curl
+          - net-tools
+          - lnav
+          - tree
+          - ncdu
+        state: present
+      when: "'redhat_family' in group_names"
+
+    - name: Ensure .ssh directory exists
+      file:
+        path: "/root/.ssh"
+        state: directory
+        mode: '0700'
+
+    - name: Add SSH keys
+      get_url:
+        url: "{{ ssh_keys_url }}"
+        dest: "/root/.ssh/authorized_keys"
+        mode: '0600'
+
+    - name: Add .bashrc customization
+      get_url:
+        url: "{{ bashrc_url }}"
+        dest: "/root/.bashrc-append"
+      command:
+        cmd: "cat /root/.bashrc-append >> /root/.bashrc"
+
+    - name: Add .bash_aliases customization
+      get_url:
+        url: "{{ bash_aliases_url }}"
+        dest: "/root/.bash_aliases-append"
+      command:
+        cmd: "cat /root/.bash_aliases-append >> /root/.bash_aliases"
+
+    - name: Display finishing notes
+      debug:
+        msg:
+          - "SSH keys added and aliases updated. Please source your .bash_aliases or restart your session."
