@@ -1,0 +1,38 @@
+---
+- name: Install Packages
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Install necessary Debian packages
+      apt:
+        name:
+          - curl
+          - net-tools
+          - lnav
+          - tree
+          - ncdu
+        state: present
+      when: "'debian_family' in group_names"
+
+    - name: Install necessary Fedora packages
+      dnf:
+        name:
+          - curl
+          - net-tools
+          - lnav
+          - tree
+          - ncdu
+        state: present
+      when: "'fedora' in group_names"
+
+    - name: Install necessary CentOS/RHEL packages
+      yum:
+        name:
+          - curl
+          - net-tools
+          - lnav
+          - tree
+          - ncdu
+        state: present
+      when: "'redhat_family' in group_names"

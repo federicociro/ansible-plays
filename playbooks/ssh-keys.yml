@@ -1,0 +1,25 @@
+---
+- name: Setup SSH Keys
+  hosts: all
+  become: yes
+
+  vars:
+    ssh_keys_url: "https://github.com/federicociro.keys"
+
+  tasks:
+    - name: Ensure .ssh directory exists
+      file:
+        path: "/root/.ssh"
+        state: directory
+        mode: '0700'
+
+    - name: Add SSH keys
+      get_url:
+        url: "{{ ssh_keys_url }}"
+        dest: "/root/.ssh/authorized_keys"
+        mode: '0600'
+
+    - name: Display finishing notes
+      debug:
+        msg:
+          - "SSH keys added."

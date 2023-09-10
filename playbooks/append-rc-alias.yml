@@ -1,0 +1,33 @@
+---
+- name: Append RC and Alias Files
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Add .bashrc customization
+      copy:
+        src: "./config/rc"
+        dest: "/root/.bashrc-append"
+
+    - name: Append .bashrc
+      command:
+        cmd: "cat /root/.bashrc-append >> /root/.bashrc"
+        
+    - name: Remove .bashrc-append
+      file:
+        path: "/root/.bashrc-append"
+        state: absent
+
+    - name: Add .bash_aliases customization
+      copy:
+        src: "./config/alias"
+        dest: "/root/.bash_aliases-append"
+
+    - name: Append .bash_aliases
+      command:
+        cmd: "cat /root/.bash_aliases-append >> /root/.bash_aliases"
+
+    - name: Remove .bash_aliases-append
+      file:
+        path: "/root/.bash_aliases-append"
+        state: absent

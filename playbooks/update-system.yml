@@ -1,0 +1,23 @@
+---
+- name: Update System
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Update and upgrade apt packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+      when: "'debian_family' in group_names"
+
+    - name: Update and upgrade dnf packages
+      dnf:
+        name: '*'
+        state: latest
+      when: "'fedora' in group_names"
+
+    - name: Update and upgrade yum packages
+      yum:
+        name: '*'
+        state: latest
+      when: "'redhat_family' in group_names"
