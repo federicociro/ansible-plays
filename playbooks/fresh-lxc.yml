@@ -70,21 +70,7 @@
         dest: "/root/.ssh/authorized_keys"
         mode: '0600'
 
-    - name: Add .bashrc customization
-      copy:
-        src: "./config/rc"
-        dest: "/root/.bashrc-append"
-      command:
-        cmd: "cat /root/.bashrc-append >> /root/.bashrc"
-
-    - name: Add .bash_aliases customization
-      copy:
-        src: "./config/alias"
-        dest: "/root/.bash_aliases-append"
-      command:
-        cmd: "cat /root/.bash_aliases-append >> /root/.bash_aliases"
-
     - name: Display finishing notes
       debug:
         msg:
-          - "SSH keys added and aliases updated. Please source your .bash_aliases or restart your session."
+          - "SSH keys added."
