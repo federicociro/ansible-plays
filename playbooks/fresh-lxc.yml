@@ -5,8 +5,6 @@
 
   vars:
     ssh_keys_url: "https://github.com/federicociro.keys"
-    bashrc_url: "https://gist.githubusercontent.com/federicociro/3b0792254aa7f08cb6931766573055c9/raw/d5e08b99cb264b2251bc16fa1bf1c54a2d7646d2/rc"
-    bash_aliases_url: "https://gist.githubusercontent.com/federicociro/3b0792254aa7f08cb6931766573055c9/raw/d5e08b99cb264b2251bc16fa1bf1c54a2d7646d2/alias"
 
   tasks:
     - name: Update and upgrade apt packages
@@ -73,15 +71,15 @@
         mode: '0600'
 
     - name: Add .bashrc customization
-      get_url:
-        url: "{{ bashrc_url }}"
+      copy:
+        src: "./config/rc"
         dest: "/root/.bashrc-append"
       command:
         cmd: "cat /root/.bashrc-append >> /root/.bashrc"
 
     - name: Add .bash_aliases customization
-      get_url:
-        url: "{{ bash_aliases_url }}"
+      copy:
+        src: "./config/alias"
         dest: "/root/.bash_aliases-append"
       command:
         cmd: "cat /root/.bash_aliases-append >> /root/.bash_aliases"
