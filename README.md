@@ -1,5 +1,7 @@
 # Ansible Configuration and Playbooks Repository
 
+![Proxmox Lab](assets/pve.jpg)
+
 ## Introduction
 
 Welcome to my Ansible Configuration and Playbooks repository. In addition to general system administration tasks, this repository serves as a hub for deploying containers and VMs in my Proxmox cluster. As a Solutions Architect with a strong focus on DevOps, these playbooks are designed to solve real-world challenges in modern, distributed systems.
