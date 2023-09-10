@@ -1,0 +1,70 @@
+---
+- name: Install and Configure WireGuard
+  hosts: your_wireguard_server
+  become: true
+  vars:
+    server_address: "192.168.2.1/24"
+    server_private_key: "your_server_private_key_here"
+    client_address: "192.168.2.2/32"
+    client_private_key: "your_client_private_key_here"
+    server_public_key: "your_server_public_key_here"
+    dns_servers: "192.168.1.1"
+    server_endpoint: "myserver.dyndns.org:51820"
+    peers:
+      - public_key: "client1_public_key_here"
+        allowed_ips: "192.168.2.2/32"
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install WireGuard and qrencode
+      apt:
+        name:
+          - wireguard
+          - qrencode
+        state: present
+
+    - name: Copy WireGuard server config
+      template:
+        src: ./config/wg0.j2
+        dest: /etc/wireguard/wg0.conf
+        mode: '0600'
+
+    - name: Allow WireGuard traffic on UFW
+      ufw:
+        rule: allow
+        port: 51820
+        proto: udp
+        comment: "Wireguard"
+
+    - name: Enable IP forwarding
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        state: present
+        sysctl_set: yes
+        reload: yes
+
+    - name: Enable and Start WireGuard
+      systemd:
+        name: wg-quick@wg0
+        enabled: yes
+        state: started
+
+    - name: Create WireGuard client config
+      delegate_to: localhost
+      template:
+        src: peer1.j2
+        dest: "./peer1.conf"
+
+    - name: Generate QR code for client config
+      delegate_to: localhost
+      command:
+        cmd: "qrencode -t ansiutf8 < ./peer1.conf"
+      register: qr_output
+
+    - name: Show QR code on terminal
+      debug:
+        msg: "{{ qr_output.stdout_lines }}"
