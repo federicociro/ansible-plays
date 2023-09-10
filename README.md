@@ -26,15 +26,15 @@ Welcome to my Ansible Configuration and Playbooks repository. In addition to gen
 
 1. Clone this repository:
 
-    \```bash
+    ```bash
     git clone https://github.com/yourusername/ansible-configs.git
-    \```
+    ```
 
 2. Navigate to the directory:
 
-    \```bash
+    ```bash
     cd ansible-configs
-    \```
+    ```
 
 3. Update the `inventory.ini` with the target node information.
 
@@ -42,9 +42,9 @@ Welcome to my Ansible Configuration and Playbooks repository. In addition to gen
 
 To run a playbook, simply execute:
 
-\```bash
+```bash
 ansible-playbook -i inventory.ini playbook_name.yml
-\```
+```
 
 ## Contributing
 
