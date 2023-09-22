@@ -7,19 +7,36 @@
     ssh_keys_url: "https://github.com/federicociro.keys"
 
   tasks:
-    - name: Ensure .ssh directory exists
-      file:
-        path: "/root/.ssh"
-        state: directory
-        mode: '0700'
-
-    - name: Add SSH keys
+    - name: Download SSH public keys
       get_url:
-        url: "{{ ssh_keys_url }}"
-        dest: "/root/.ssh/authorized_keys"
-        mode: '0600'
+        url: "https://github.com/federicociro.keys"
+        dest: /tmp/new_keys
+      register: download_result
 
-    - name: Display finishing notes
-      debug:
-        msg:
-          - "SSH keys added."
+    - name: Ensure ~/.ssh directory exists
+      file:
+        path: /root/.ssh
+        state: directory
+        mode: "0700"
+      when: download_result.changed
+
+    - name: Add new keys to authorized_keys
+      shell: |
+        while read -r key; do
+          if ! grep -qF "$key" /root/.ssh/authorized_keys; then
+            echo "$key" >> /root/.ssh/authorized_keys
+          fi
+        done < /tmp/new_keys
+      when: download_result.changed
+
+    - name: Set correct permissions for authorized_keys
+      file:
+        path: /root/.ssh/authorized_keys
+        mode: "0600"
+      when: download_result.changed
+
+    - name: Clean up temporary file
+      file:
+        path: /tmp/new_keys
+        state: absent
+      when: download_result.changed
