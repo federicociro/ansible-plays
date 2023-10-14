@@ -1,0 +1,8 @@
+---
+- name: Set Timezone to Europe/Madrid
+  hosts: all
+  become: yes
+  tasks:
+    - name: Set Timezone
+      timezone:
+        name: Europe/Madrid
