@@ -27,7 +27,7 @@ Welcome to my Ansible Configuration and Playbooks repository. In addition to gen
 1. Clone this repository:
 
 ```bash
-https://github.com/federicociro/ansible-plays.git
+git clone https://github.com/federicociro/ansible-plays.git
 ```
 
 2. Navigate to the directory:
