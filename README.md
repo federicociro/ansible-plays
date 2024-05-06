@@ -33,10 +33,10 @@ git clone https://github.com/federicociro/ansible-plays.git
 2. Navigate to the directory:
 
 ```bash
-cd ansible-configs
+cd ansible-plays
 ```
 
-3. Update the `inventory.ini` with the target node information.
+3. Update the `hosts` file with the target node information.
 
 ## Usage
 
