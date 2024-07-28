@@ -1,23 +1,31 @@
 ---
-- name: Update System
+- name: Update all systems
   hosts: all
   become: yes
-
   tasks:
-    - name: Update and upgrade apt packages
+    - name: Update FreeBSD packages
+      community.general.pkgng:
+        name: "*"
+        state: latest
+      when: ansible_os_family == "FreeBSD"
+
+    - name: Update apt cache (Debian/Ubuntu)
       apt:
         update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Upgrade all packages (Debian/Ubuntu)
+      apt:
         upgrade: dist
-      when: "'debian_family' in group_names"
+      when: ansible_os_family == "Debian"
 
-    - name: Update and upgrade dnf packages
+    - name: Update dnf cache (Fedora/CentOS 8+)
       dnf:
-        name: '*'
-        state: latest
-      when: "'fedora' in group_names"
+        update_cache: yes
+      when: ansible_os_family == "RedHat" and ansible_distribution_major_version|int >= 8
 
-    - name: Update and upgrade yum packages
-      yum:
-        name: '*'
+    - name: Upgrade all packages (Fedora/CentOS 8+)
+      dnf:
+        name: "*"
         state: latest
-      when: "'redhat_family' in group_names"
+      when: ansible_os_family == "RedHat" and ansible_distribution_major_version|int >= 8
