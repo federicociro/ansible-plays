@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Script to read the proxmox hosts lxc containers and add a SSH key if it's missing.
+
+SSH_KEY="SOME_PUBLIC_KEY"
+
+# Get all running LXC containers
+CONTAINERS=$(pct list | grep running | awk '{print $1}')
+
+for CT in $CONTAINERS
+do
+    echo "Checking container $CT"
+    
+    # Check if the key already exists
+    if ! pct exec $CT -- grep -q "$SSH_KEY" /root/.ssh/authorized_keys 2>/dev/null; then
+        echo "Adding SSH key to container $CT"
+        
+        # Ensure .ssh directory exists
+        pct exec $CT -- mkdir -p /root/.ssh
+        
+        # Add the key
+        pct exec $CT -- bash -c "echo '$SSH_KEY' >> /root/.ssh/authorized_keys"
+        
+        # Set correct permissions
+        pct exec $CT -- chmod 700 /root/.ssh
+        pct exec $CT -- chmod 600 /root/.ssh/authorized_keys
+        
+        echo "Key added to container $CT"
+    else
+        echo "Key already exists in container $CT"
+    fi
+done
+
+echo "Script completed"
