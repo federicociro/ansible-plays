@@ -1,8 +1,20 @@
 ---
-- name: Set Timezone to Europe/Madrid
+- name: Set timezone to Europe/Madrid
   hosts: all
   become: yes
+
   tasks:
-    - name: Set Timezone
+    - name: Set timezone
       timezone:
         name: Europe/Madrid
+
+    - name: Ensure NTP is installed
+      package:
+        name: ntp
+        state: present
+
+    - name: Ensure NTP service is running and enabled
+      service:
+        name: ntp
+        state: started
+        enabled: yes
