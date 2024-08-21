@@ -1,0 +1,21 @@
+---
+- name: Update timezone in all containers
+  hosts: all
+  become: yes
+  tasks:
+    - name: Set timezone to Europe/Madrid
+      timezone:
+        name: Europe/Madrid
+
+    - name: Update /etc/timezone file
+      copy:
+        content: "Europe/Madrid\n"
+        dest: /etc/timezone
+
+    - name: Reconfigure tzdata
+      command: dpkg-reconfigure -f noninteractive tzdata
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+      ignore_errors: yes
