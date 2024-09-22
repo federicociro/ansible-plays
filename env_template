@@ -1,0 +1,4 @@
+PROXMOX_URL=https://your-proxmox-cluster-url:8006
+PROXMOX_USER=your-api-user@pve
+PROXMOX_TOKEN_ID=your-token-id
+PROXMOX_TOKEN_SECRET=your-token-secret
