@@ -8,3 +8,7 @@ token_secret: "{{ lookup('env', 'PROXMOX_TOKEN_SECRET') }}"
 compose:
   ansible_host: proxmox_agent_interfaces[1]["ip-addresses"][0].split('/')[0]
   ansible_user: proxmox_ciuser
+groups:
+  webservers: "'web' in (proxmox_tags|default([]))"
+  dbservers: "'db' in (proxmox_tags|default([]))"
+   
