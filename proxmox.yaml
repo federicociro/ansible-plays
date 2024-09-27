@@ -1,14 +1,7 @@
 plugin: community.general.proxmox
 validate_certs: true
 want_facts: true
-url: "{{ lookup('env', 'PROXMOX_URL') }}"
-user: "{{ lookup('env', 'PROXMOX_USER') }}"
-token_id: "{{ lookup('env', 'PROXMOX_TOKEN_ID') }}"
-token_secret: "{{ lookup('env', 'PROXMOX_TOKEN_SECRET') }}"
+want_proxmox_nodes_ansible_host: true
 compose:
   ansible_host: proxmox_agent_interfaces[1]["ip-addresses"][0].split('/')[0]
   ansible_user: proxmox_ciuser
-groups:
-  webservers: "'web' in (proxmox_tags|default([]))"
-  dbservers: "'db' in (proxmox_tags|default([]))"
-   
