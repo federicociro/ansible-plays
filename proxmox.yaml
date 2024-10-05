@@ -3,7 +3,7 @@ url: "{{ lookup('ansible.builtin.env', 'PROXMOX_URL') }}"
 user: "{{ lookup('ansible.builtin.env', 'PROXMOX_USER') }}"
 token_id: "{{ lookup('ansible.builtin.env', 'PROXMOX_TOKEN') }}"
 token_secret: "{{ lookup('ansible.builtin.env', 'PROXMOX_TOKEN_SECRET') }}"
-validate_certs: false
+validate_certs: true
 want_facts: true
 want_proxmox_nodes_ansible_host: true
 compose:
@@ -11,6 +11,8 @@ compose:
   ansible_user: "'root' if 'node' in proxmox_type else ansible_user"
 groups:
   arr: "'arr' in (proxmox_tags_parsed|list)"
+  production: "'prod' in (proxmox_tags_parsed|list)"
+  development: "'dev' in (proxmox_tags_parsed|list)"
   bitcoin: "'bitcoin' in (proxmox_tags_parsed|list)"
   monitoring: "'monitoring' in (proxmox_tags_parsed|list)"
   network: "'network' in (proxmox_tags_parsed|list)"
