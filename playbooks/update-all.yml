@@ -1,0 +1,23 @@
+---
+- name: Update and upgrade Debian-based systems
+  hosts: all  # Define the target hosts (or use a specific group, e.g., 'debian_hosts')
+#  become: yes  # Run the tasks with elevated privileges (sudo)
+  tasks:
+
+    - name: Update apt package list
+      apt:
+        update_cache: yes
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist  # "dist" ensures full-upgrade (similar to 'apt full-upgrade')
+        cache_valid_time: 3600
+
+    - name: Autoremove unnecessary packages
+      apt:
+        autoremove: yes
+
+    - name: Clean up cached packages
+      apt:
+        autoclean: yes
+
