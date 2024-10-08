@@ -1,27 +1,20 @@
 ---
-- name: Configure APT cache for all hosts
-  hosts: all
-  become: yes
-  vars:
-    apt_proxy_url: "http://192.168.11.18:3142"
-    apt_proxy_file: "/etc/apt/apt.conf.d/01proxy"
-
+- name: Update APT proxy configuration
+  hosts: lxcs
+  become: true
+  vars_files:
+    - vars.yml
   tasks:
-    - name: Remove existing proxy configuration files
-      file:
-        path: "{{ item }}"
-        state: absent
-      loop:
-        - "/etc/apt/apt.conf.d/01proxy"
-        - "/etc/apt/apt.conf.d/02proxy"
+    - name: Update APT proxy file
+      lineinfile:
+        path: /etc/apt/apt.conf.d/01proxy
+        line: "Acquire::http::Proxy \"{{ apt_proxy_url }}\";"
+        create: yes
 
-    - name: Create new proxy configuration file
-      template:
-        src: apt_proxy.j2
-        dest: "{{ apt_proxy_file }}"
-        owner: root
-        group: root
-        mode: '0644'
+    - name: Remove 02proxy file if it exists
+      file:
+        path: /etc/apt/apt.conf.d/02proxy
+        state: absent
 
     - name: Ensure APT cache is updated
       apt:
