@@ -20,3 +20,4 @@ groups:
   monitoring: "'monitoring' in (proxmox_tags_parsed|list)"
   network: "'network' in (proxmox_tags_parsed|list)"
   proxmox_nodes: "'node' in proxmox_type"
+  vms: "inventory_hostname.startswith('vm')"
