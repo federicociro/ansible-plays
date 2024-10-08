@@ -1,7 +1,7 @@
 ---
 - name: Update APT proxy configuration
-  hosts: lxcs
-  become: true
+  hosts: all
+#  become: true
   vars_files:
     - vars.yml
   tasks:
