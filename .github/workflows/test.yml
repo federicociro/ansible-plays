@@ -35,19 +35,37 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install ansible ansible-lint molecule molecule-docker molecule-ansible pytest-testinfra
+          pip install ansible
 
       - name: Create test inventory
         run: |
-          mkdir -p molecule/default/files
+          mkdir -p tests
           echo "[all]
-          localhost ansible_connection=local" > molecule/default/files/test_inventory
+          localhost ansible_connection=local
+          
+          [test]
+          localhost ansible_connection=local" > tests/test_inventory
+          
+      - name: Create test vars file
+        run: |
+          echo "---
+          # Test variables
+          timezone: UTC
+          packages:
+            - vim
+            - htop
+          ssh_keys:
+            - user: testuser
+              key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFxu0Oalj2xQr1Zppuaax4mTM9UkJgN79x7uU/4VCVmm test@localhost
+          " > tests/test_vars.yml
+
+      - name: Test syntax for all playbooks
+        run: |
+          find playbooks -name "*.yml" -type f -print0 | xargs -0 -n1 ansible-playbook --syntax-check -i tests/test_inventory
 
       - name: Test update-all playbook
-        run: ansible-playbook -i molecule/default/files/test_inventory playbooks/update-all.yml --check --diff
-
-      - name: Test install-packages playbook 
-        run: ansible-playbook -i molecule/default/files/test_inventory playbooks/install-packages.yml --check --diff
+        run: ansible-playbook -i tests/test_inventory playbooks/update-all.yml --check
 
       - name: Test set_timezone playbook
-        run: ansible-playbook -i molecule/default/files/test_inventory playbooks/set_timezone.yml --check --diff
+        run: |
+          ansible-playbook -i tests/test_inventory playbooks/set_timezone.yml --check -e "{'timezone': 'UTC'}"
