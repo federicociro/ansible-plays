@@ -1,13 +1,25 @@
 ---
 - name: Update and upgrade Debian-based systems
-  hosts: debian_lxc:debian_family  # Target Debian-based LXC containers and other Debian hosts
+  hosts: debian_lxc:&lxc  # Target only Debian-based LXC containers
   serial: "{{ ansible_parallelism|default('20%') }}"  # Run in batches for better performance
   gather_facts: no  # Skip gathering facts for speed
   tasks:
+    - name: Ensure connectivity to LXC container
+      ping:
+      register: ping_result
+      failed_when: false
+      tags: ['connectivity', 'check']
+
+    - name: Display connection status
+      debug:
+        msg: "Container {{ inventory_hostname }} is {{ 'reachable' if ping_result.ping == 'pong' else 'unreachable' }}"
+      tags: ['connectivity', 'check']
+
     - name: Update apt package list
       apt:
         update_cache: yes
       tags: ['update', 'apt']
+      when: ping_result.ping is defined and ping_result.ping == 'pong'
 
     - name: Upgrade all packages
       apt:
@@ -17,22 +29,36 @@
       throttle: "{{ ansible_throttle|default(10) }}"  # Limit concurrent upgrades
       async: 600  # Allow 10 minutes for completion
       poll: 10    # Check every 10 seconds
+      when: ping_result.ping is defined and ping_result.ping == 'pong'
 
     - name: Autoremove unnecessary packages
       apt:
         autoremove: yes
       tags: ['cleanup', 'apt']
+      when: ping_result.ping is defined and ping_result.ping == 'pong'
 
     - name: Clean up cached packages
       apt:
         autoclean: yes
       tags: ['cleanup', 'apt']
+      when: ping_result.ping is defined and ping_result.ping == 'pong'
 
 - name: Update and upgrade RHEL-based systems
-  hosts: redhat_lxc:redhat_family  # Target RHEL-based LXC containers and other RHEL hosts
+  hosts: redhat_lxc:&lxc  # Target only RHEL-based LXC containers
   serial: "{{ ansible_parallelism|default('20%') }}"  # Run in batches for better performance
   gather_facts: no  # Skip gathering facts for speed
   tasks:
+    - name: Ensure connectivity to LXC container
+      ping:
+      register: ping_result
+      failed_when: false
+      tags: ['connectivity', 'check']
+
+    - name: Display connection status
+      debug:
+        msg: "Container {{ inventory_hostname }} is {{ 'reachable' if ping_result.ping == 'pong' else 'unreachable' }}"
+      tags: ['connectivity', 'check']
+
     - name: Update all packages
       yum:
         name: '*'
@@ -42,9 +68,11 @@
       throttle: "{{ ansible_throttle|default(10) }}"  # Limit concurrent upgrades
       async: 600  # Allow 10 minutes for completion
       poll: 10    # Check every 10 seconds
+      when: ping_result.ping is defined and ping_result.ping == 'pong'
 
     - name: Clean up cached packages and remove unused dependencies
       yum:
         autoremove: yes
       tags: ['cleanup', 'yum']
+      when: ping_result.ping is defined and ping_result.ping == 'pong'
 
