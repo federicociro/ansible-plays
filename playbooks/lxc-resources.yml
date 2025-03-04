@@ -1,0 +1,56 @@
+---
+- name: Configure LXC container resources
+  hosts: lxc  # Target all LXC containers
+  gather_facts: false
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: Get container information from Proxmox API
+      uri:
+        url: "{{ lookup('ansible.builtin.env', 'PROXMOX_URL') }}/api2/json/nodes/{{ proxmox_node }}/lxc/{{ container_id }}"
+        method: GET
+        headers:
+          Authorization: "PVEAPIToken={{ lookup('ansible.builtin.env', 'PROXMOX_USER') }}={{ lookup('ansible.builtin.env', 'PROXMOX_TOKEN') }}={{ lookup('ansible.builtin.env', 'PROXMOX_TOKEN_SECRET') }}"
+        validate_certs: yes
+        status_code: 200
+      register: container_info
+      delegate_to: localhost
+      vars:
+        container_id: "{{ inventory_hostname | regex_search('\\d+') }}"
+        proxmox_node: "{{ proxmox_node_name }}"
+      tags: ['info', 'api']
+
+    - name: Set container memory limits
+      uri:
+        url: "{{ lookup('ansible.builtin.env', 'PROXMOX_URL') }}/api2/json/nodes/{{ proxmox_node }}/lxc/{{ container_id }}/config"
+        method: PUT
+        body_format: form-urlencoded
+        body:
+          memory: "{{ container_memory_limit | default(512) }}"
+          swap: "{{ container_swap_size | default(256) }}"
+        headers:
+          Authorization: "PVEAPIToken={{ lookup('ansible.builtin.env', 'PROXMOX_USER') }}={{ lookup('ansible.builtin.env', 'PROXMOX_TOKEN') }}={{ lookup('ansible.builtin.env', 'PROXMOX_TOKEN_SECRET') }}"
+        validate_certs: yes
+        status_code: 200
+      delegate_to: localhost
+      vars:
+        container_id: "{{ inventory_hostname | regex_search('\\d+') }}"
+        proxmox_node: "{{ proxmox_node_name }}"
+      tags: ['memory', 'api']
+
+    - name: Set container CPU limits
+      uri:
+        url: "{{ lookup('ansible.builtin.env', 'PROXMOX_URL') }}/api2/json/nodes/{{ proxmox_node }}/lxc/{{ container_id }}/config"
+        method: PUT
+        body_format: form-urlencoded
+        body:
+          cpulimit: "{{ container_cpu_limit | default(1) }}"
+        headers:
+          Authorization: "PVEAPIToken={{ lookup('ansible.builtin.env', 'PROXMOX_USER') }}={{ lookup('ansible.builtin.env', 'PROXMOX_TOKEN') }}={{ lookup('ansible.builtin.env', 'PROXMOX_TOKEN_SECRET') }}"
+        validate_certs: yes
+        status_code: 200
+      delegate_to: localhost
+      vars:
+        container_id: "{{ inventory_hostname | regex_search('\\d+') }}"
+        proxmox_node: "{{ proxmox_node_name }}"
+      tags: ['cpu', 'api']
