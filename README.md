@@ -43,6 +43,7 @@ cp env_template .env
 
 ```bash
 ansible-galaxy collection install community.general
+ansible-galaxy collection install ansible.utils
 ```
 
 ## Usage
