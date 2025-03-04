@@ -1,4 +1,4 @@
-name: Greetings
+name: Community Greetings
 
 on: [pull_request_target, issues]
 
@@ -12,5 +12,5 @@ jobs:
     - uses: actions/first-interaction@v1
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
-        issue-message: "Message that will be displayed on users' first issue"
-        pr-message: "Message that will be displayed on users' first pull request"
+        issue-message: "👋 Thanks for opening your first issue! We appreciate your contribution to our Ansible Proxmox LXC management repository. Our team will review your issue as soon as possible."
+        pr-message: "🎉 Thank you for your first pull request! Your contribution to improving our Ansible Proxmox LXC management is valuable. Please make sure your PR follows our code style guidelines and includes appropriate tests if applicable."

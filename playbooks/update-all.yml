@@ -1,23 +1,50 @@
 ---
 - name: Update and upgrade Debian-based systems
-  hosts: all  # Define the target hosts (or use a specific group, e.g., 'debian_hosts')
-#  become: yes  # Run the tasks with elevated privileges (sudo)
+  hosts: debian_lxc:debian_family  # Target Debian-based LXC containers and other Debian hosts
+  serial: "{{ ansible_parallelism|default('20%') }}"  # Run in batches for better performance
+  gather_facts: no  # Skip gathering facts for speed
   tasks:
-
     - name: Update apt package list
       apt:
         update_cache: yes
+      tags: ['update', 'apt']
 
     - name: Upgrade all packages
       apt:
         upgrade: dist  # "dist" ensures full-upgrade (similar to 'apt full-upgrade')
         cache_valid_time: 3600
+      tags: ['upgrade', 'apt']
+      throttle: "{{ ansible_throttle|default(10) }}"  # Limit concurrent upgrades
+      async: 600  # Allow 10 minutes for completion
+      poll: 10    # Check every 10 seconds
 
     - name: Autoremove unnecessary packages
       apt:
         autoremove: yes
+      tags: ['cleanup', 'apt']
 
     - name: Clean up cached packages
       apt:
         autoclean: yes
+      tags: ['cleanup', 'apt']
+
+- name: Update and upgrade RHEL-based systems
+  hosts: redhat_lxc:redhat_family  # Target RHEL-based LXC containers and other RHEL hosts
+  serial: "{{ ansible_parallelism|default('20%') }}"  # Run in batches for better performance
+  gather_facts: no  # Skip gathering facts for speed
+  tasks:
+    - name: Update all packages
+      yum:
+        name: '*'
+        state: latest
+        update_cache: yes
+      tags: ['update', 'yum']
+      throttle: "{{ ansible_throttle|default(10) }}"  # Limit concurrent upgrades
+      async: 600  # Allow 10 minutes for completion
+      poll: 10    # Check every 10 seconds
+
+    - name: Clean up cached packages and remove unused dependencies
+      yum:
+        autoremove: yes
+      tags: ['cleanup', 'yum']
 

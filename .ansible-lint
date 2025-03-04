@@ -1,0 +1,33 @@
+---
+# .ansible-lint configuration
+
+# Exclude specific rules or specific files from being linted
+exclude_paths:
+  - .github/
+  - .git/
+  - .github/workflows/*.yml
+  - assets/
+  - LICENSE
+
+# Specify additional custom rules
+parseable: true
+
+# Only load the rules specified in this list
+# Warn_list is a list of rules to remain at "warning" level
+warn_list:
+  - '106'  # Role name not valid
+  - '204'  # Lines should be no longer than 160 chars
+  - '301'  # Commands should not change things if nothing needs doing
+  - '303'  # Using command rather than module
+  - '306'  # Warning about shell/command
+  - 'experimental'  # All rules tagged as experimental
+  - 'fqcn-builtins'  # Allow using short form for builtins
+
+# Adjust which tags (by severities) are considered failures
+use_default_rules: true
+verbosity: 1
+
+kinds:
+  - playbook: "playbooks/*.yml"
+  - tasks: "tasks/*.yml"
+  - vars: "vars/*.yml"

@@ -1,1 +1,20 @@
+# Ansible variable configuration
+
+# APT proxy configuration
 apt_proxy_url: "http://YOUR_APT_PROXY_URL:3142"
+
+# Parallelism settings
+ansible_parallelism: "30%"  # Default percentage of hosts to process in parallel
+ansible_throttle: 15        # Default number of concurrent operations 
+
+# Performance tuning
+ansible_ssh_pipelining: true
+ansible_ssh_transfer_method: piped
+
+# LXC container settings
+container_memory_limit: 512  # Default memory limit in MB
+container_swap_size: 256     # Default swap size in MB
+container_cpu_limit: 1       # Default CPU core limit
+
+# Proxmox domain suffix
+proxmox_domain: "example.com"

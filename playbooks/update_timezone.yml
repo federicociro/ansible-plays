@@ -1,21 +1,38 @@
 ---
 - name: Update timezone in all containers
-  hosts: all
-  become: yes
+  hosts: lxc  # Specifically target LXC containers
+  serial: "{{ ansible_parallelism|default('50%') }}"  # Run in larger batches as this is a fast operation
+  gather_facts: no  # Skip gathering facts for speed
+  vars:
+    timezone: "Europe/Madrid"
   tasks:
-    - name: Set timezone to Europe/Madrid
+    - name: Check if systemd is present
+      stat:
+        path: /bin/systemctl
+      register: systemd_present
+      tags: ['timezone', 'check']
+
+    - name: Set timezone using timezone module
       timezone:
-        name: Europe/Madrid
+        name: "{{ timezone }}"
+      tags: ['timezone', 'set']
 
     - name: Update /etc/timezone file
       copy:
-        content: "Europe/Madrid\n"
+        content: "{{ timezone }}\n"
         dest: /etc/timezone
+        mode: '0644'
+      tags: ['timezone', 'set']
 
-    - name: Reconfigure tzdata
+    - name: Reconfigure tzdata (Debian/Ubuntu)
       command: dpkg-reconfigure -f noninteractive tzdata
+      changed_when: false  # This is an idempotent operation
+      when: ansible_os_family is undefined or ansible_os_family == "Debian"
+      tags: ['timezone', 'apply']
 
-    - name: Reload systemd daemon
+    - name: Reload systemd daemon when present
       systemd:
         daemon_reload: yes
+      when: systemd_present.stat.exists
       ignore_errors: yes
+      tags: ['timezone', 'systemd']

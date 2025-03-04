@@ -1,0 +1,38 @@
+# Add 'playbook' label to any changes to playbooks
+playbook:
+  - 'playbooks/**/*.yml'
+
+# Add 'config' label to any changes to config files
+config:
+  - 'config/**/*'
+
+# Add 'documentation' label to any changes to documentation files
+documentation:
+  - '**/*.md'
+  - 'LICENSE'
+
+# Add 'workflow' label to any workflow changes
+workflow:
+  - '.github/workflows/**'
+
+# Add 'proxmox' label to any changes related to Proxmox specific files
+proxmox:
+  - 'proxmox.yaml'
+  - 'playbooks/lxc-resources.yml'
+
+# Add 'debian' label to any changes related to Debian updates
+debian:
+  - 'playbooks/update-debian.yml'
+
+# Add 'ansible' label to any changes to ansible configuration
+ansible:
+  - 'ansible.cfg'
+  - 'ansible-lint.yml'
+  - 'hosts'
+
+# Add 'security' label to any changes related to SSH or Wireguard
+security:
+  - 'playbooks/ssh-keys.yml'
+  - 'playbooks/wireguard.yml'
+  - 'config/wireguard/**'
+  - 'add_ssh_key'

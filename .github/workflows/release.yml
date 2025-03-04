@@ -1,0 +1,47 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Get changes since last release
+        id: get_changes
+        run: |
+          previous_tag=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -z "$previous_tag" ]; then
+            echo "CHANGES=$(git log --pretty=format:"* %s (%h)" $GITHUB_SHA)" >> $GITHUB_OUTPUT
+          else
+            echo "CHANGES=$(git log --pretty=format:"* %s (%h)" ${previous_tag}..${GITHUB_REF#refs/tags/})" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## Ansible Proxmox LXC Management ${{ steps.get_version.outputs.VERSION }}
+            
+            ### Changes in this release:
+            ${{ steps.get_changes.outputs.CHANGES }}
+            
+            ### Instructions
+            See [README.md](README.md) for installation and usage instructions.
+          draft: false
+          prerelease: false

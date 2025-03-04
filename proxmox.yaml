@@ -6,18 +6,31 @@ token_secret: "{{ lookup('ansible.builtin.env', 'PROXMOX_TOKEN_SECRET') }}"
 validate_certs: true
 want_facts: true
 want_proxmox_nodes_ansible_host: true
+facts_cache: true
+facts_cache_timeout: 3600
 compose:
   # Get the IP address of the LXC from the network configuration using ansible.utils.ipaddr
   #ansible_host: "proxmox_ipconfig0.ip | default(proxmox_net0.ip) | ansible.utils.ipaddr"
   # Get the hostname
   ansible_host: "'{}.{}'.format(inventory_hostname, lookup('ansible.builtin.env', 'PROXMOX_DOMAIN'))"
   ansible_user: "'root' if 'node' in proxmox_type else ansible_user"
+  # Set gather_facts to false for proxmox nodes to speed up execution
+  gather_facts: "proxmox_type != 'node'"
+  # Set ansible connection timeout
+  ansible_connection_timeout: 30
 groups:
+  # Application groups
   arr: "'arr' in (proxmox_tags_parsed|list)"
   production: "'prod' in (proxmox_tags_parsed|list)"
   development: "'dev' in (proxmox_tags_parsed|list)"
   bitcoin: "'bitcoin' in (proxmox_tags_parsed|list)"
   monitoring: "'monitoring' in (proxmox_tags_parsed|list)"
   network: "'network' in (proxmox_tags_parsed|list)"
+  # Machine type groups
   proxmox_nodes: "'node' in proxmox_type"
   vms: "inventory_hostname.startswith('vm')"
+  lxc: "proxmox_type == 'lxc'"
+  # OS family groups for LXC containers (derived from templates)
+  debian_lxc: "proxmox_type == 'lxc' and ('debian' in proxmox_template or 'ubuntu' in proxmox_template)"
+  redhat_lxc: "proxmox_type == 'lxc' and ('centos' in proxmox_template or 'rocky' in proxmox_template or 'alma' in proxmox_template)"
+  alpine_lxc: "proxmox_type == 'lxc' and 'alpine' in proxmox_template"
