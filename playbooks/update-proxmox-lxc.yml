@@ -1,0 +1,99 @@
+---
+- name: Update LXC containers
+  hosts: proxmox_all_lxc:&proxmox_all_running  # Solo contenedores LXC en ejecución
+  remote_user: root
+  become: no
+  gather_facts: yes
+  strategy: free  # Permite actualizar en paralelo
+  
+  tasks:
+    - name: Test connectivity
+      ping:
+      register: ping_result
+      
+    - name: Display container info
+      debug:
+        msg: |
+          Container: {{ inventory_hostname }}
+          Node: {{ proxmox_node | default('unknown') }}
+          Status: {{ proxmox_status | default('unknown') }}
+          Template: {{ proxmox_template | default('unknown') }}
+      
+    - name: Skip if ping failed
+      meta: end_host
+      when: ping_result.ping != "pong"
+      
+    - name: Update Debian/Ubuntu containers
+      block:
+        - name: Update apt cache
+          apt:
+            update_cache: yes
+            cache_valid_time: 3600
+            
+        - name: Check for available updates
+          shell: apt list --upgradable 2>/dev/null | wc -l
+          register: available_updates
+          changed_when: false
+          
+        - name: Display available updates
+          debug:
+            msg: "{{ inventory_hostname }}: {{ available_updates.stdout | int - 1 }} updates available"
+            
+        - name: Upgrade all packages
+          apt:
+            upgrade: dist
+            autoremove: yes
+            autoclean: yes
+          register: debian_upgrade
+          async: 600
+          poll: 10
+          when: (available_updates.stdout | int - 1) > 0
+          
+        - name: Display update summary
+          debug:
+            msg: |
+              Container: {{ inventory_hostname }}
+              OS: {{ ansible_distribution | default('Unknown') }} {{ ansible_distribution_version | default('') }}
+              Updates applied: {{ debian_upgrade.changed | default(false) }}
+              Packages updated: {{ debian_upgrade.stdout_lines | length if debian_upgrade.changed else 0 }}
+              
+      rescue:
+        - name: Handle Debian update errors
+          debug:
+            msg: "Failed to update {{ inventory_hostname }}: {{ ansible_failed_result.msg }}"
+            
+      when: 
+        - ansible_os_family is defined
+        - ansible_os_family == "Debian"
+      
+    - name: Handle Alpine containers  
+      block:
+        - name: Update apk cache
+          apk:
+            update_cache: yes
+            
+        - name: Upgrade all packages
+          apk:
+            upgrade: yes
+          register: alpine_upgrade
+          
+        - name: Display Alpine update summary
+          debug:
+            msg: |
+              Container: {{ inventory_hostname }} (Alpine)
+              Updates applied: {{ alpine_upgrade.changed }}
+              
+      when: 
+        - ansible_os_family is defined
+        - ansible_os_family == "Alpine"
+      
+    - name: Handle other OS families
+      debug:
+        msg: |
+          Container: {{ inventory_hostname }}
+          OS Family: {{ ansible_os_family | default('Unknown') }}
+          Distribution: {{ ansible_distribution | default('Unknown') }}
+          Manual update may be required
+      when: 
+        - ansible_os_family is defined
+        - ansible_os_family not in ["Debian", "Alpine"]

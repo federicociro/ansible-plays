@@ -1,0 +1,97 @@
+---
+- name: Update Proxmox nodes
+  hosts: proxmox_nodes
+  remote_user: root  # Conectar directamente como root
+  become: no         # No usar sudo ya que somos root
+  gather_facts: yes
+  serial: 1  # Actualizar de uno en uno para no afectar el cluster
+  
+  tasks:
+    - name: Test connectivity
+      ping:
+      
+    - name: Check current user
+      command: whoami
+      register: current_user
+      
+    - name: Display connection info
+      debug:
+        msg: "Connected to {{ inventory_hostname }} as {{ current_user.stdout }}"
+        
+    - name: Check if sudo is available
+      command: which sudo
+      register: sudo_check
+      failed_when: false
+      changed_when: false
+      
+    - name: Install sudo if missing (Debian/Ubuntu)
+      apt:
+        name: sudo
+        state: present
+        update_cache: yes
+      when: 
+        - sudo_check.rc != 0
+        - ansible_os_family == "Debian"
+        
+    - name: Update package cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      
+    - name: Check if reboot is required
+      stat:
+        path: /var/run/reboot-required
+      register: reboot_required_file
+      
+    - name: Get current kernel version
+      command: uname -r
+      register: current_kernel
+      changed_when: false
+      
+    - name: Get current Proxmox version
+      command: pveversion
+      register: pve_version
+      changed_when: false
+      failed_when: false
+      
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+        autoremove: yes
+        autoclean: yes
+      register: upgrade_result
+      
+    - name: Display upgrade summary
+      debug:
+        msg: |
+          Node: {{ inventory_hostname }}
+          Current user: {{ current_user.stdout }}
+          Proxmox version: {{ pve_version.stdout | default('Unknown') }}
+          Kernel: {{ current_kernel.stdout }}
+          Packages upgraded: {{ upgrade_result.changed }}
+          Reboot required: {{ reboot_required_file.stat.exists }}
+          
+    - name: Prompt for reboot if required
+      pause:
+        prompt: |
+          Node {{ inventory_hostname }} requires a reboot.
+          Press ENTER to reboot now or Ctrl+C to skip
+      when: reboot_required_file.stat.exists
+      
+    - name: Reboot if required
+      reboot:
+        reboot_timeout: 300
+        connect_timeout: 20
+        test_command: uptime
+      when: reboot_required_file.stat.exists
+      
+    - name: Verify Proxmox services after reboot
+      service:
+        name: "{{ item }}"
+        state: started
+      loop:
+        - pve-cluster
+        - pvedaemon  
+        - pveproxy
+        - pvestatd
+      when: reboot_required_file.stat.exists

@@ -1,0 +1,65 @@
+---
+- name: SSH and connectivity diagnostic
+  hosts: localhost
+  gather_facts: false
+  vars:
+    failed_hosts:
+      - wp-hierro
+      - bookstack-int  
+      - paperless
+      - firefly-maru
+      - openwebui
+    working_hosts:
+      - portainer
+      - syncthing
+      - bookstack
+      - bookstack-bbo
+  tasks:
+    - name: Test SSH connectivity to failed hosts
+      shell: |
+        ssh -o ConnectTimeout=10 -o BatchMode=yes \
+            -o StrictHostKeyChecking=no \
+            root@{{ item }}.internal.federicociro.com \
+            'echo "SSH OK for {{ item }}"'
+      loop: "{{ failed_hosts }}"
+      ignore_errors: true
+      register: ssh_test_failed
+
+    - name: Test SSH connectivity to working hosts  
+      shell: |
+        ssh -o ConnectTimeout=10 -o BatchMode=yes \
+            -o StrictHostKeyChecking=no \
+            root@{{ item }}.internal.federicociro.com \
+            'echo "SSH OK for {{ item }}"'
+      loop: "{{ working_hosts }}"
+      ignore_errors: true
+      register: ssh_test_working
+
+    - name: Test ping to failed hosts
+      shell: ping -c 3 {{ item }}.internal.federicociro.com
+      loop: "{{ failed_hosts }}"
+      ignore_errors: true
+      register: ping_test_failed
+
+    - name: Display SSH test results for failed hosts
+      debug:
+        msg: |
+          Host: {{ item.item }}
+          SSH Result: {{ 'SUCCESS' if item.rc == 0 else 'FAILED' }}
+          SSH Output: {{ item.stdout if item.rc == 0 else item.stderr }}
+      loop: "{{ ssh_test_failed.results }}"
+
+    - name: Display SSH test results for working hosts
+      debug:
+        msg: |
+          Host: {{ item.item }}
+          SSH Result: {{ 'SUCCESS' if item.rc == 0 else 'FAILED' }}
+          SSH Output: {{ item.stdout if item.rc == 0 else item.stderr }}
+      loop: "{{ ssh_test_working.results }}"
+
+    - name: Display ping results for failed hosts
+      debug:
+        msg: |
+          Host: {{ item.item }}
+          Ping Result: {{ 'SUCCESS' if item.rc == 0 else 'FAILED' }}
+      loop: "{{ ping_test_failed.results }}"

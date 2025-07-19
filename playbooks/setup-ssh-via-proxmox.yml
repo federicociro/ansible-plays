@@ -1,0 +1,36 @@
+---
+- name: Setup SSH keys via Proxmox nodes
+  hosts: proxmox_nodes
+  remote_user: root
+  become: no
+  gather_facts: no
+  
+  vars:
+    ssh_public_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+    
+  tasks:
+    - name: Get list of running LXC containers
+      shell: "pct list | grep running | awk '{print $1}'"
+      register: running_containers
+      changed_when: false
+      
+    - name: Display running containers on this node
+      debug:
+        msg: "Node {{ inventory_hostname }} has containers: {{ running_containers.stdout_lines }}"
+        
+    - name: Setup SSH key for each container
+      shell: |
+        pct exec {{ item }} -- mkdir -p /root/.ssh
+        pct exec {{ item }} -- chmod 700 /root/.ssh
+        echo "{{ ssh_public_key }}" | pct exec {{ item }} -- tee -a /root/.ssh/authorized_keys
+        pct exec {{ item }} -- chmod 600 /root/.ssh/authorized_keys
+      loop: "{{ running_containers.stdout_lines }}"
+      when: running_containers.stdout_lines | length > 0
+      
+    - name: Enable SSH service in containers
+      shell: |
+        pct exec {{ item }} -- systemctl enable ssh
+        pct exec {{ item }} -- systemctl start ssh
+      loop: "{{ running_containers.stdout_lines }}"
+      when: running_containers.stdout_lines | length > 0
+      failed_when: false

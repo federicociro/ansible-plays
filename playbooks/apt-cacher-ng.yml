@@ -1,21 +1,29 @@
 ---
 - name: Update APT proxy configuration
   hosts: all
-#  become: true
+  become: true
   vars_files:
     - vars.yml
   tasks:
-    - name: Update APT proxy file
-      lineinfile:
-        path: /etc/apt/apt.conf.d/01proxy
-        line: "Acquire::http::Proxy \"{{ apt_proxy_url }}\";"
-        create: yes
-
-    - name: Remove 02proxy file if it exists
+    - name: Remove old proxy files if they exist
       file:
-        path: /etc/apt/apt.conf.d/02proxy
+        path: "{{ item }}"
         state: absent
+      loop:
+        - /etc/apt/apt.conf.d/01proxy
+        - /etc/apt/apt.conf.d/02proxy
+
+    - name: Create APT proxy configuration
+      copy:
+        content: 'Acquire::http::Proxy "http://apt-cache.internal.federicociro.com:3142";'
+        dest: /etc/apt/apt.conf.d/99proxy
+        mode: '0644'
+        owner: root
+        group: root
 
     - name: Ensure APT cache is updated
       apt:
         update_cache: yes
+        cache_valid_time: 0
+      retries: 3
+      delay: 5

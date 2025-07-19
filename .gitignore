@@ -1,2 +1,5 @@
 .env
 vars.yml
+group_vars/all/vault.yml
+.vault-pass
+.vault_pass
